@@ -23,10 +23,15 @@
 
 | 变量 | 作用 | 默认 |
 |---|---|---|
-| `DSH_CHROME` | 内核可执行文件路径 | 脚本里写的一个 Windows 路径（换机器必改） |
+| `DSH_CHROME` | 内核可执行文件路径 | **自动探测**（见下） |
 | `DSH_GH_PROFILE` | 浏览器 profile 目录（登录态存在这里） | `%TEMP%/dsh-github-profile` |
 
-两个脚本都认 `--chrome <path>` / `--profile <dir>` 参数，优先于环境变量。
+**内核默认自动找**：`DSH_CHROME` → 系统 Chrome/Edge/Brave/Chromium → 有界扫描
+（`%LOCALAPPDATA%`、`%APPDATA%`、`Program Files`、`(x86)`、`~/Desktop`，深度 4–5，
+认识豆包 / 夸克 / 360 / QQ / 搜狗 / UC / 猎豹 / Vivaldi / Opera，并要求目录里有
+`icudtl.dat` 或 `*.pak`）。找不到才需要手动指定。
+
+`gh-device-login` 认 `--chrome <path>` / `--profile <dir>`，优先于环境变量。
 
 ---
 
@@ -83,6 +88,15 @@ node scripts/chrome-probe.mjs "https://github.com/<you>/<repo>/new/main" \
 | 脚本会存 token 吗 | `gh-device-login` 会把结果写到 `%TEMP%`（本机临时目录），不进仓库、不进对话 |
 | `gh-web-commit` 用什么身份 | 你浏览器 profile 里已登录的会话，脚本**不读密码** |
 | 会碰你的仓库吗 | 只在显式传了 `<owner/repo>` 时操作；`--dry` 可先空跑 |
+
+## 与 dsh-websift 的关系
+
+**没有运行时依赖**，但「怎么找 Chrome」用的是同一份逻辑：本仓库的
+`lib/detect-chrome.mjs` 是 [dsh-websift](https://github.com/KNLCXY/dsh-websift)
+里 `scanChromiumRoots()` 的拷贝。
+
+为什么拷贝而不是依赖：这些脚本的价值就是**单独 clone 一个文件就能跑**，
+拉一个插件当依赖反而把门槛抬高了。代价是改探测逻辑时要两边同步（两边文件顶部都有这句提醒）。
 
 ## 许可
 

@@ -3,12 +3,17 @@
 // 自动化特征挡了 —— 换不同的启动参数对比即可。
 //
 //   ELECTRON_RUN_AS_NODE=1 "<DeepSeek Harness.exe>" scripts/chrome-probe.mjs <url> [--js EXPR] [--wait MS] [--flag "--foo"] [--port 9445] [--visible]
+import { resolveChrome } from '../lib/detect-chrome.mjs';
 import { spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
 
-const CHROME = process.env.DSH_CHROME || String.raw`C:\Users\Administrator\Desktop\ocs-2.9.24-setup-win-x64\resources\bin\chrome\chrome\chrome.exe`;
+const CHROME = process.env.DSH_CHROME || resolveChrome();
+if (!CHROME) {
+  console.error('没找到可用的 Chrome/Chromium：设 DSH_CHROME 或用 --chrome 指定；装了 Chrome/Edge 的话会自动找到。');
+  process.exit(2);
+}
 const PROFILE = process.env.DSH_GH_PROFILE || join(tmpdir(), 'dsh-github-profile');
 
 const argv = process.argv.slice(2);

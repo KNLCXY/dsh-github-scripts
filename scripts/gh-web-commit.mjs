@@ -9,6 +9,7 @@
 //   ELECTRON_RUN_AS_NODE=1 "<DeepSeek Harness.exe>" scripts/gh-web-commit.mjs <owner/repo> <path> <localFile> [--dry]
 //
 // --dry 只填内容、截住提交请求并打印，不真提交（用来发现接口形状）。
+import { resolveChrome } from '../lib/detect-chrome.mjs';
 import { spawn } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -16,7 +17,11 @@ import { join } from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
 
 // 内核路径 / profile 都可覆盖：DSH_CHROME、DSH_GH_PROFILE（或 --chrome / --profile）。
-const CHROME = process.env.DSH_CHROME || String.raw`C:\Users\Administrator\Desktop\ocs-2.9.24-setup-win-x64\resources\bin\chrome\chrome\chrome.exe`;
+const CHROME = process.env.DSH_CHROME || resolveChrome();
+if (!CHROME) {
+  console.error('没找到可用的 Chrome/Chromium：设 DSH_CHROME 或用 --chrome 指定；装了 Chrome/Edge 的话会自动找到。');
+  process.exit(2);
+}
 const PROFILE = process.env.DSH_GH_PROFILE || join(tmpdir(), 'dsh-github-profile');
 
 const argv = process.argv.slice(2);

@@ -10,6 +10,7 @@
 //   ... --scope "repo read:org"  --port 9444  --visible  --profile <dir>  --chrome <exe>
 //
 // 输出：token（gho_...）写进 %TEMP%/gh-device-token.txt，不打印到 stdout（免得进对话上下文）。
+import { resolveChrome } from '../lib/detect-chrome.mjs';
 import { spawn } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -26,7 +27,11 @@ const arg = (n, d) => {
 // profile：DSH_GH_PROFILE > --profile > %TEMP%/dsh-github-profile。
 // 想复用 dsh-browser-kernel 的登录态，把 profile 指到 %TEMP%/dsh-browser-kernel-profile，
 // 前提是那边启动的 Chrome 已经关掉。
-const CHROME = process.env.DSH_CHROME || arg('chrome', String.raw`C:\Users\Administrator\Desktop\ocs-2.9.24-setup-win-x64\resources\bin\chrome\chrome\chrome.exe`);
+const CHROME = process.env.DSH_CHROME || arg('chrome', '') || resolveChrome();
+if (!CHROME) {
+  console.error('没找到可用的 Chrome/Chromium：设 DSH_CHROME 或用 --chrome 指定；装了 Chrome/Edge 的话会自动找到。');
+  process.exit(2);
+}
 const PROFILE = process.env.DSH_GH_PROFILE || arg('profile', join(tmpdir(), 'dsh-github-profile'));
 const CLIENT_ID = '178c6fc778ccc68e1d6a'; // gh CLI 的公开 client_id（设备流不需要 client_secret）
 
